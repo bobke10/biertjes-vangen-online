@@ -292,8 +292,8 @@ const CFG = {
   spel: {
     rondes: 5,            // aantal rondes (er zijn foto's voor fase 0 tot 5)
     pintenPerRonde: 24,   // een volle bak
-    levens: 3,
-    maxGemorst: 5         // zoveel pinten laten vallen = 1 leven kwijt
+    levens: 1,            // 1 = geen tweede kans: maxGemorst pinten laten vallen in één bak = meteen game over
+    maxGemorst: 5         // zoveel pinten mag je per bak laten vallen; de teller begint elke bak opnieuw
   },
 
   // Besturing en gsm
@@ -412,7 +412,7 @@ const CFG = {
     gemorst: ['Gemorst!', 'Allee fijn!', 'Even lomp!', 'Miserez!', 'Ma dikken!', 'Vangen e schoun!'],
     gevangen: ['Jeplaaa!'],
     kansGevangenTekst: 1,       // zoveel van de gevangen pinten krijgen een tekst (1 = allemaal, de rest: +1)
-    teVeelGemorst: '{max}x gemorst: leven kwijt!',
+    teVeelGemorst: '{max}x gemorst: leven kwijt!',   // alleen bij meer dan 1 leven; anders meteen game over
     nulGevangen: '0.0?! Bah!',
     waterGevangen: 'Water?! Schande!'
   }
@@ -1247,6 +1247,7 @@ function gemist(it, s) {
   st.gemorst++; Geluid.gemorst();
   zweefTekst(it.x, H - vloerH() - 20 * gs, eenVan(CFG.teksten.gemorst), '#ffcf6a');
   if (st.gemorst >= CFG.spel.maxGemorst) {
+    if (st.levens <= 1) { levenKwijt(); return; }   // laatste (of enige) leven: meteen game over
     st.gemorst = 0;
     zweefTekst(speelB / 2, H / 2, CFG.teksten.teVeelGemorst.replace('{max}', CFG.spel.maxGemorst), '#ff7a6a');
     levenKwijt();
@@ -1310,7 +1311,7 @@ function tekenPaneel() {
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = KLEUR.messingLicht; ctx.font = letter(28 * gs);
   ctx.fillText(`RONDE ${st.ronde}/${sp.rondes}`, x0 + m, y + 24 * gs);
-  for (let i = 0; i < sp.levens; i++) {
+  for (let i = 0; sp.levens > 1 && i < sp.levens; i++) {   // met maar 1 leven: geen kelkjes
     ctx.save(); ctx.globalAlpha = i < st.levens ? 1 : .18;
     tekenItem(ctx, 'pint', W - m - (8 + i * 22) * gs, y + 8 * gs, .38 * gs); ctx.restore();
   }
@@ -1356,8 +1357,8 @@ function tekenHud() {
   ctx.fillStyle = KLEUR.messingLicht; ctx.font = letter(20 * gs); ctx.textAlign = 'left';
   ctx.fillText(`RONDE ${st.ronde}/${sp.rondes}`, p + 14 * gs, p + 28 * gs);
 
-  // levens als kelkjes
-  for (let i = 0; i < sp.levens; i++) {
+  // levens als kelkjes (met maar 1 leven: geen kelkjes)
+  for (let i = 0; sp.levens > 1 && i < sp.levens; i++) {
     ctx.save(); ctx.globalAlpha = i < st.levens ? 1 : .18;
     tekenItem(ctx, 'pint', p + b - (20 + i * 22) * gs, p + 22 * gs, .4 * gs); ctx.restore();
   }
