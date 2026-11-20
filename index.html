@@ -293,7 +293,7 @@ const CFG = {
     rondes: 5,            // aantal rondes (er zijn foto's voor fase 0 tot 5)
     pintenPerRonde: 24,   // een volle bak
     levens: 1,            // 1 = geen tweede kans: maxGemorst pinten laten vallen in één bak = meteen game over
-    maxGemorst: 5         // zoveel pinten mag je per bak laten vallen; de teller begint elke bak opnieuw
+    maxGemorst: 3         // zoveel pinten mag je per bak laten vallen; de teller begint elke bak opnieuw
   },
 
   // Besturing en gsm
@@ -313,7 +313,7 @@ const CFG = {
     tijdTussenItems: 900,       // in ronde 0; gaat er per ronde af:
     tijdTussenItemsPerRonde: 110,
     minTijdTussenItems: 340,
-    kansGoud: .06,              // gouden pint (telt voor 3)
+    kansGoud: 0,                // gouden pint (telt voor 3); 0 = uit (te makkelijk)
     kansSlecht: 0,              // 0.0 of water (0 = uit, alleen pintjes); bv. .16 om ze terug te zetten
     kansSlechtPerRonde: 0       // komt er per ronde bij; bv. .04
   },
@@ -342,6 +342,8 @@ const CFG = {
     // Ontbreekt een fase, dan blijft de foto van de fase ervoor staan.
     fase0: 'thomas-0.png', fase1: 'thomas-1.png', fase2: 'thomas-2.png',
     fase3: 'thomas-3.png', fase4: 'thomas-4.png', fase5: 'thomas-5.png',
+    // Foto op het game-over-scherm (uit bronfotos/fases/dood.jpg). Ontbreekt ze: de foto van de fase waarin hij viel.
+    dood: 'thomas-dood.png',
     // achtergrond: de eerste foto die bestaat wordt gebruikt, met eigen donkerte en waas
     cafe: ['bar.jpg', 'cafe.jpg'],
     cafeStijl: {
@@ -368,7 +370,7 @@ const CFG = {
 
   // Logo van de café ('t Chieleboer) als neonreclame aan de muur in het speelveld
   logo: {
-    opMuur: true,
+    opMuur: false,        // uit op vraag van Matisse
     kleur: '#ff3b2f',     // kleur van de neongloed
     muurBreedte: .55,     // breedte op de muur, als deel van het speelveld
     muurHoogte: .2        // hoogte op de muur (0 = bovenaan, 1 = onderaan)
@@ -395,15 +397,15 @@ const CFG = {
       'oei ie sta mor klein ze',
       "geen foto's trekken e fijn"
     ],
-    volgendeRonde: 'Volgende bak',
+    volgendeRonde: 'Volgenden bak',
     naarFinale: 'Naar de finale',
 
     // Alle 5 bakken af
     winTitel: '5 BAKKN AF!',
-    winTekst: '{pinten} pinten gepakt. Hiel den tet. Miserez gee ons nog ienen!',
+    winTekst: '{pinten} pinten gepakt. Hiel den tet in. Miserez gee ons nog ienen!',
 
     // Game over (bij meer zinnen wordt er willekeurig één gekozen)
-    gameOverTitel: 'KUNDE GIJ NOU ECHT NIE FIJN',
+    gameOverTitel: 'KUNDE GIJ NOU ECHT NIET FIJN',
     gameOver: [
       'Shit pee, {pinten} pinten en ge ligt al onder tafel. Miserez kan beter drinken!'
     ],
@@ -580,7 +582,7 @@ const Sprites = {
   img: {},
   naam: {},          // welk bestand er effectief geladen is, per sprite
   SOORTEN: ['glas', 'fles', 'goud', 'nul', 'water', 'bak', 'cafe', 'logo', 'start',
-            'fase0', 'fase1', 'fase2', 'fase3', 'fase4', 'fase5'],
+            'fase0', 'fase1', 'fase2', 'fase3', 'fase4', 'fase5', 'dood'],
 
   // laadt alle sprites; klaar(soort) wordt aangeroepen per sprite die gevonden is
   laad(klaar) {
@@ -641,8 +643,9 @@ const FASES = 6;
 
 const zacht = t => t * t * (3 - 2 * t);
 
-// de foto voor deze fase, of anders de laatste fase ervoor die er wel is
+// de foto voor deze fase, of anders de laatste fase ervoor die er wel is ('dood' = de game-over-foto)
 function faseFoto(fase) {
+  if (fase === 'dood') return Sprites.heeft('dood') ? { img: Sprites.img.dood, k: 'dood' } : null;
   for (let k = Math.min(fase, FASES - 1); k >= 0; k--) {
     if (Sprites.heeft('fase' + k)) return { img: Sprites.img['fase' + k], k };
   }
@@ -1478,7 +1481,7 @@ const Schermen = {
     $('overScore').textContent =
       `${st.totaal} ${st.totaal === 1 ? 'pint' : 'pinten'} gevangen · ronde ${st.ronde} van ${CFG.spel.rondes}`;
     this.toon('over');
-    this.vrijgezel('over', st.uit);
+    this.vrijgezel('over', Sprites.heeft('dood') ? 'dood' : st.uit);   // eigen game-over-foto als die er is
   },
 
   gewonnen() {
